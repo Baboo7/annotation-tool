@@ -5,13 +5,21 @@
     v-on:mouseover="selfHovered = true"
     v-on:mouseout="selfHovered = false"
     ref="annotator">
-    <div class="p-2 rounded">
-      <strong>Entité(s)</strong>
+    <div class="p-2 container-fluid rounded">
+      <strong>Entité(s)</strong><br>
+      <div class="row my-1"
+        v-for="a in annotation">
+        <div class="col-1"></div>
+        <div class="col-8">{{a.entity}}</div>
+        <div class="col-2">del</div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
   name: 'app-annotator',
   data () {
@@ -24,11 +32,16 @@ export default {
       }
     }
   },
-  props: ['hoveredElementPosition'],
+  props: ['hoveredElementPosition', 'annotationsId'],
   computed: {
     show () {
       return this.elementHovered || this.selfHovered
-    }
+    },
+    ...mapState({
+      annotation (state) {
+        return state.document.annotations.filter(item => this.annotationsId.includes(item.id))
+      }
+    })
   },
   watch: {
     hoveredElementPosition (newVal, oldVal) {
@@ -37,6 +50,11 @@ export default {
         this.elementHovered = true
       } else {
         this.elementHovered = false
+      }
+    },
+    annotationsId (newVal, oldVal) {
+      if (newVal.length === 0) {
+        this.annotationsId = oldVal
       }
     }
   },

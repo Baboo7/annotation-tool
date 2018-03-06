@@ -1,7 +1,8 @@
 <template>
   <div id="host" class="p-2 container-fluid">
     <app-annotator
-      v-bind:hovered-element-position="hoveredAnnotatedElementPosition"></app-annotator>
+      :hovered-element-position="annotator.hoveredAnnotatedElementPosition"
+      :annotations-id="annotator.annotationsId"></app-annotator>
 
     <div class="row p-0 m-0">
       <div id="editor" class="p-1 w-100"
@@ -14,12 +15,12 @@
       <div id="highlighter" class="p-1 w-100"
         v-show="!isEditing"
         ref="highlighter">
-        <span v-for="(c, idx) in annotatedContent" class="container-hl">
+        <span v-for="c in annotatedContent" class="container-hl">
           <span v-if="c.type === 'text'">{{c.text}}</span>
           <span v-if="c.type === 'annotation'"
             class="annotation"
-            v-on:mouseover="login(idx, $event)"
-            v-on:mouseout="logout(idx, $event)">{{c.text}}</span>
+            v-on:mouseover="login(c.annotations, $event)"
+            v-on:mouseout="logout(c.annotations, $event)">{{c.text}}</span>
         </span>
       </div>
     </div>
@@ -64,7 +65,10 @@
         'content': '',
         'fadeStopwords': false,
         'isEditing': false,
-        'hoveredAnnotatedElementPosition': null
+        'annotator': {
+          'hoveredAnnotatedElementPosition': null,
+          'annotationsId': []
+        }
       }
     },
     computed: {
@@ -83,10 +87,10 @@
       /******************************************/
 
       login (idx, ev) {
-        this.hoveredAnnotatedElementPosition = ev.target.getBoundingClientRect()
+        this.setAnnotatorProps(ev.target.getBoundingClientRect(), idx)
       },
       logout (ids, ev) {
-        this.hoveredAnnotatedElementPosition = null
+        this.setAnnotatorProps(null)
       },
       updateContent (ev) {
         let payload = {
@@ -99,7 +103,7 @@
       },
       updateAnnotatedContent () {
         this.annotatedContent = this.processText(this.content)
-        this.hoveredAnnotatedElementPosition = null
+        this.setAnnotatorProps(null)
       },
       toggleEdition () {
         this.isEditing = !this.isEditing
@@ -127,6 +131,11 @@
       /*
       /******************************************/
 
+      setAnnotatorProps (hoveredAnnotatedElementPosition, annotationsId) {
+        this.annotator.hoveredAnnotatedElementPosition = hoveredAnnotatedElementPosition
+        if (typeof annotationsId !== 'undefined') this.annotator.annotationsId = annotationsId
+      },
+
       /*
         Process a text for highlighting.
 
@@ -144,7 +153,7 @@
             text: (string) text to display
             start: (number) id of the beginning of the chunk
             end: (number) id of the end of the chunk
-            annotations: (array) conatin ids of the associated annotations
+            annotations: (array) contain ids of the associated annotations
       */
       processText (text) {
         let breakpoints = new Set(this.annotations.map(item => item.start).concat(this.annotations.map(item => item.end)).sort((a, b) => a - b))
