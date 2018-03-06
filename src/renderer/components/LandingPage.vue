@@ -1,5 +1,16 @@
 <template>
   <div id="host" class="p-2 container-fluid">
+    <div id="annotator" class="pt-2"
+      v-bind:class="{ invisible: !annotator.display }"
+      v-bind:style="{ top: annotator.top + 'px', left: annotator.left + 'px' }"
+      v-on:mouseover="annotator.display = true"
+      v-on:mouseout="annotator.display = false"
+      ref="annotator">
+      <div class="p-1 rounded">
+        annotator
+      </div>
+    </div>
+
     <div class="row p-0 m-0">
       <div id="editor" class="p-1 w-100"
         v-show="isEditing"
@@ -11,13 +22,13 @@
       <div id="highlighter" class="p-1 w-100"
         v-show="!isEditing"
         ref="highlighter">
-        <div v-for="c in annotatedContent" class="container-hl">
+        <span v-for="c in annotatedContent" class="container-hl">
           <span v-if="c.type === 'text'">{{c.text}}</span>
           <span v-if="c.type === 'annotation'"
             class="annotation"
-            v-on:mouseover="login(c.annotations)"
-            v-on:mouseout="logout(c.annotations)">{{c.text}}</span>
-        </div>
+            v-on:mouseover="login(c.annotations, $event)"
+            v-on:mouseout="logout(c.annotations, $event)">{{c.text}}</span>
+        </span>
       </div>
     </div>
 
@@ -60,7 +71,12 @@
         'annotatedContent': [],
         'content': '',
         'fadeStopwords': false,
-        'isEditing': false
+        'isEditing': false,
+        'annotator': {
+          'display': false,
+          'top': 0,
+          'left': 0
+        }
       }
     },
     methods: {
@@ -71,10 +87,19 @@
       /*
       /******************************************/
 
-      login (ids) {
-        // console.log('login ' + ids)
+      login (ids, ev) {
+        let tarRect = ev.target.getBoundingClientRect()
+        let annRect = this.$refs.annotator.getBoundingClientRect()
+        let docRect = document.body.getBoundingClientRect()
+        let left = tarRect.left + tarRect.width / 2 - annRect.width / 2
+        this.annotator.top = tarRect.bottom
+        if (left + annRect.width > docRect.width) this.annotator.left = docRect.width - annRect.width
+        else if (left < 0) this.annotator.left = 0
+        else this.annotator.left = left
+        this.annotator.display = true
       },
-      logout (ids) {
+      logout (ids, ev) {
+        this.annotator.display = false
         // console.log('logout ' + ids)
       },
       updateContent (ev) {
@@ -287,16 +312,26 @@
     margin: 0 auto;
     max-width: 800px;
 
+    #annotator {
+      width: 300px;
+      position: absolute;
+      z-index: 1000;
+      > div {
+        background-color: yellow;
+        border: 1px solid $grey;
+      }
+    }
+
     #editor, #highlighter {
       min-height: 300px;
-      background-color: $grey-l;
-      border: 1px solid $grey-l;
+      background-color: white;
       word-wrap: break-word;
+      text-align: justify;
     }
   }
 
   .container-hl {
-    display: inline;
+    box-sizing: content-box;
   }
 
   .annotation {
