@@ -1,12 +1,16 @@
 <template>
   <div id="host" class="p-2 container-fluid">
     <div class="row p-0 m-0">
-      <div id="editor" class="p-1 col-sm-6"
+      <div id="editor" class="p-1 w-100"
+        v-show="isEditing"
         contenteditable="true"
         @input="updateContent"
-        ref="editor"></div>
+        ref="editor">
+      </div>
 
-      <div id="highlighter" class="p-1 col-sm-6" ref="highlighter">
+      <div id="highlighter" class="p-1 w-100"
+        v-show="!isEditing"
+        ref="highlighter">
         <div v-for="c in annotatedContent" class="container-hl">
           <span v-if="c.type === 'text'">{{c.text}}</span>
           <span v-if="c.type === 'annotation'"
@@ -18,16 +22,30 @@
     </div>
 
     <div id="actions" class="mt-2">
-      <button type="button" class="btn btn-primary">save</button>
-      <button class="btn"
-        v-bind:class="{ 'btn-light': fadeStopwords, 'btn-secondary': !fadeStopwords }"
-        @click="toggleFadeStopwords">
-        stopwords
-      </button>
-      <button type="button" class="btn btn-info"
-        @click="setSelectionBlue">
-        blue
-      </button>
+      <div v-show="isEditing">
+        <button type="button" class="btn btn-primary"
+          @click="toggleEdition">
+          Annotate
+        </button>
+      </div>
+
+      <div v-show="!isEditing">
+        <button type="button" class="btn btn-primary"
+          @click="toggleEdition">
+          Edit
+        </button>
+
+        <button class="btn"
+          v-bind:class="{ 'btn-light': fadeStopwords, 'btn-secondary': !fadeStopwords }"
+          @click="toggleFadeStopwords">
+          stopwords
+        </button>
+
+        <button type="button" class="btn btn-info"
+          @click="setSelectionBlue">
+          blue
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -41,7 +59,8 @@
         'annotationId': 0,
         'annotatedContent': [],
         'content': '',
-        'fadeStopwords': false
+        'fadeStopwords': false,
+        'isEditing': false
       }
     },
     methods: {
@@ -61,10 +80,13 @@
       updateContent (ev) {
         this.annotations = this.updateAnnotationsBounds(this.getSelectionCharacterOffsetWithin(this.$refs.editor).start, ev.target.innerText, this.content.length)
         this.content = ev.target.innerText
-        this.updateAnnotatedContent()
       },
       updateAnnotatedContent () {
         this.annotatedContent = this.processText(this.content)
+      },
+      toggleEdition () {
+        this.isEditing = !this.isEditing
+        if (!this.isEditing) this.updateAnnotatedContent()
       },
       toggleFadeStopwords () {
         this.fadeStopwords = !this.fadeStopwords
@@ -85,7 +107,6 @@
             else if (i.start === j.start && i.end < j.end) return 0
             else return 1
           })
-          console.log(this.annotations)
           this.updateAnnotatedContent()
         }
       },
