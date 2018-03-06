@@ -54,18 +54,25 @@
 </template>
 
 <script>
+  import { mapState } from 'vuex'
+
   export default {
     name: 'landing-page',
     data () {
       return {
-        'annotations': [],
-        'annotationId': 0,
         'annotatedContent': [],
         'content': '',
         'fadeStopwords': false,
         'isEditing': false,
         'hoveredAnnotatedElementPosition': null
       }
+    },
+    computed: {
+      ...mapState({
+        annotations (state) {
+          return state.document.annotations
+        }
+      })
     },
     methods: {
 
@@ -82,7 +89,12 @@
         this.hoveredAnnotatedElementPosition = null
       },
       updateContent (ev) {
-        this.annotations = this.updateAnnotationsBounds(this.getSelectionCharacterOffsetWithin(this.$refs.editor).start, ev.target.innerText, this.content.length)
+        let payload = {
+          'caret': this.getSelectionCharacterOffsetWithin(this.$refs.editor).start,
+          'newContent': ev.target.innerText,
+          'oldL': this.content.length
+        }
+        this.$store.commit('UPDATE_ANNOTATIONS_BOUNDS', payload)
         this.content = ev.target.innerText
       },
       updateAnnotatedContent () {
@@ -99,19 +111,12 @@
       setSelectionBlue () {
         let a = this.getSelectionCharacterOffsetWithin(this.$refs.highlighter)
         if (a.start !== a.end && a.start >= 0 && a.end <= this.content.length) {
-          let ann = {
-            'id': this.annotationId,
+          let payload = {
             'start': a.start,
-            'end': a.end
+            'end': a.end,
+            'entity': 'Fruit'
           }
-          this.annotationId++
-
-          this.annotations.push(ann)
-          this.annotations.sort((i, j) => {
-            if (i.start < j.start || (i.start === j.start && i.end < j.end)) return -1
-            else if (i.start === j.start && i.end < j.end) return 0
-            else return 1
-          })
+          this.$store.commit('ADD_ANNOTATION', payload)
           this.updateAnnotatedContent()
         }
       },
@@ -121,48 +126,6 @@
       /*    CORE
       /*
       /******************************************/
-
-      /*
-        Update annotations bounds while text is edited.
-
-        Args:
-          caret: (number) position of the caret in the editor
-          newL: (number) new content length
-          oldL: (number) old content length
-
-        Return:
-          annotations: (array)
-      */
-      updateAnnotationsBounds (caret, newContent, oldL) {
-        let annotations = this.annotations.slice()
-
-        let newL = newContent.length
-        if (oldL > newL) {
-          // some text has been deleted
-          let delta = newL - oldL
-          annotations = annotations.map(item => {
-            item.start = item.start > caret ? item.start + delta : item.start
-            item.end = item.end > caret ? item.end + delta : item.end
-
-            return item
-          })
-        } else if (oldL < newL) {
-          // some text has been added
-          let delta = newL - oldL
-          annotations = annotations.map(item => {
-            item.start = item.start >= caret ? item.start + delta : item.start
-            item.end = item.end >= caret ? item.end + delta : item.end
-
-            return item
-          })
-        }
-
-        annotations = annotations.filter(item => {
-          return item.start !== item.end && !/^\s+$/.test(newContent.substring(item.start, item.end))
-        })
-
-        return annotations
-      },
 
       /*
         Process a text for highlighting.
