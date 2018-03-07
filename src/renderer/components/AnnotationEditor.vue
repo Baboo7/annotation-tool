@@ -10,12 +10,9 @@
       <div class="row my-1"
         v-for="a in annotations">
         <div class="col-1"></div>
-        <div class="col-8">{{a.entity}}</div>
-        <div class="col-2">
-          <button type="button"
-            @click="deleteAnnotation(a.id)">
-            del
-          </button>
+        <div class="col-11">
+          <span class="btn btn-text" @click="deleteAnnotation(a.id)">x</span>
+          {{a.entity}}
         </div>
       </div>
     </div>
@@ -115,6 +112,12 @@ export default {
     > div {
       background-color: yellow;
       border: 1px solid $grey;
+    }
+  }
+
+  .btn-text {
+    &:hover {
+      text-decoration: underline;
     }
   }
 </style>

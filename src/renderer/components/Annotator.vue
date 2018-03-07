@@ -1,15 +1,18 @@
 <template>
   <div id="annotator" class="pt-2"
+    v-bind:class="{ invisible: !show }"
     v-bind:style="{ top: position.top + 'px', left: position.left + 'px' }"
-    v-on:mouseover="selfHovered = true"
-    v-on:mouseout="selfHovered = false"
+    @mouseover="mouseover"
+    @mouseout="mouseout"
     ref="annotator">
     <div class="p-2 container-fluid rounded">
       <strong>Entité<span v-if="entities.length >= 2">s</span></strong><br>
       <div class="row my-1 p-0"
         v-for="e in entities">
         <div class="col-1"></div>
-        <div class="col-11">{{e}}</div>
+        <div class="col-11">
+          <span class="btn btn-text" @click="selectEntity(e)">{{e}}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -22,6 +25,7 @@ export default {
   name: 'app-annotator',
   data () {
     return {
+      'freshlyUpdated': false,
       'selfHovered': false,
       'position': {
         'top': 0,
@@ -31,6 +35,9 @@ export default {
   },
   props: ['mouse'],
   computed: {
+    show () {
+      return this.freshlyUpdated || this.selfHovered
+    },
     ...mapState({
       entities (state) {
         return state.collection.entities
@@ -40,6 +47,7 @@ export default {
   watch: {
     mouse (newVal, oldVal) {
       this.position = this.computePosition(newVal)
+      this.freshlyUpdated = true
     }
   },
   methods: {
@@ -49,6 +57,18 @@ export default {
     /*    INTERFACE
     /*
     /******************************************/
+
+    mouseover () {
+      this.selfHovered = true
+      this.freshlyUpdated = false
+    },
+    mouseout () {
+      this.selfHovered = false
+    },
+    selectEntity (entity) {
+      this.$emit('entity-selected', entity)
+      this.mouseout()
+    },
 
     /******************************************/
     /*
@@ -88,6 +108,12 @@ export default {
     > div {
       background-color: yellow;
       border: 1px solid $grey;
+    }
+  }
+
+  .btn-text {
+    &:hover {
+      text-decoration: underline;
     }
   }
 </style>

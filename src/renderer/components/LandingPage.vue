@@ -3,10 +3,11 @@
     <app-annotation-editor
       :hovered-element-position="annotationEditor.hoveredAnnotatedElementPosition"
       :annotations-id="annotationEditor.annotationsId"
-      v-on:update-annotated-content="updateAnnotatedContent"></app-annotation-editor>
+      @update-annotated-content="updateAnnotatedContent"></app-annotation-editor>
 
     <app-annotator
-      :mouse="annotator"></app-annotator>
+      :mouse="annotator"
+      @entity-selected="entitySelected"></app-annotator>
 
     <div class="row p-0 m-0"
       ref="host-text">
@@ -25,7 +26,7 @@
       </transition>
 
       <div id="highlighter" class="p-1"
-        @mousemove="mousedown"
+        @mousedown.right="mousedown"
         ref="highlighter">
         <span v-for="c in annotatedContent" class="container-hl">
           <span v-if="c.type === 'text'">{{c.text}}</span>
@@ -53,11 +54,6 @@
         }"
         @click="toggleFadeStopwords">
         stopwords
-      </button>
-
-      <button type="button" class="btn btn-info"
-        @click="setSelectionBlue">
-        blue
       </button>
     </div>
   </div>
@@ -132,13 +128,13 @@
       toggleFadeStopwords () {
         this.fadeStopwords = !this.fadeStopwords
       },
-      setSelectionBlue () {
+      entitySelected (entity) {
         let a = this.getSelectionCharacterOffsetWithin(this.$refs.highlighter)
         if (a.start !== a.end && a.start >= 0 && a.end <= this.content.length) {
           let payload = {
             'start': a.start,
             'end': a.end,
-            'entity': 'Fruit'
+            'entity': entity
           }
           this.$store.commit('ADD_ANNOTATION', payload)
           this.updateAnnotatedContent()
