@@ -11,7 +11,12 @@
         v-for="a in annotation">
         <div class="col-1"></div>
         <div class="col-8">{{a.entity}}</div>
-        <div class="col-2">del</div>
+        <div class="col-2">
+          <button type="button"
+            @click="deleteAnnotation(a.id)">
+            del
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -59,6 +64,24 @@ export default {
     }
   },
   methods: {
+
+    /******************************************/
+    /*
+    /*    INTERFACE
+    /*
+    /******************************************/
+
+    deleteAnnotation (id) {
+      this.$store.commit('DELETE_ANNOTATION', { 'id': id })
+      this.$emit('update-annotated-content')
+    },
+
+    /******************************************/
+    /*
+    /*    CORE
+    /*
+    /******************************************/
+
     computePosition (tarRect) {
       let annRect = this.$refs.annotator.getBoundingClientRect()
       let docRect = document.body.getBoundingClientRect()

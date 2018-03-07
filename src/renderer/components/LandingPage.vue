@@ -2,7 +2,8 @@
   <div id="host" class="p-2 container-fluid">
     <app-annotator
       :hovered-element-position="annotator.hoveredAnnotatedElementPosition"
-      :annotations-id="annotator.annotationsId"></app-annotator>
+      :annotations-id="annotator.annotationsId"
+      v-on:update-annotated-content="updateAnnotatedContent"></app-annotator>
 
     <div class="row p-0 m-0"
       ref="host-text">

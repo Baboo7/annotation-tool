@@ -27,6 +27,18 @@ const mutations = {
   },
 
   /*
+    Remove an annotation from the store.
+
+    Args:
+      state: (object)
+      payload: (object)
+        id: (number) id of the annotation
+  */
+  DELETE_ANNOTATION (state, payload) {
+    state.annotations = state.annotations.filter(item => item.id !== payload.id)
+  },
+
+  /*
     Update annotation bounds when text is edited.
 
     Args:
