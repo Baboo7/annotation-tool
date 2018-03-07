@@ -1,9 +1,9 @@
 <template>
   <div id="host" class="p-2 container-fluid">
-    <app-annotator
-      :hovered-element-position="annotator.hoveredAnnotatedElementPosition"
-      :annotations-id="annotator.annotationsId"
-      v-on:update-annotated-content="updateAnnotatedContent"></app-annotator>
+    <app-annotation-editor
+      :hovered-element-position="annotationEditor.hoveredAnnotatedElementPosition"
+      :annotations-id="annotationEditor.annotationsId"
+      v-on:update-annotated-content="updateAnnotatedContent"></app-annotation-editor>
 
     <div class="row p-0 m-0"
       ref="host-text">
@@ -22,6 +22,7 @@
       </transition>
 
       <div id="highlighter" class="p-1"
+        @mousedown.right="mousedown"
         ref="highlighter">
         <span v-for="c in annotatedContent" class="container-hl">
           <span v-if="c.type === 'text'">{{c.text}}</span>
@@ -71,7 +72,7 @@
         'content': '',
         'fadeStopwords': false,
         'isEditing': false,
-        'annotator': {
+        'annotationEditor': {
           'hoveredAnnotatedElementPosition': null,
           'annotationsId': []
         }
@@ -96,10 +97,15 @@
       /******************************************/
 
       login (idx, ev) {
-        this.setAnnotatorProps(ev.target.getBoundingClientRect(), idx)
+        this.setAnnotationEditorProps(ev.target.getBoundingClientRect(), idx)
       },
       logout (ids, ev) {
-        this.setAnnotatorProps(null)
+        this.setAnnotationEditorProps(null)
+      },
+      mousedown (ev) {
+        let mX = ev.clientX
+        let mY = ev.clientY
+        console.log(mX + ' ' + mY)
       },
       updateContent (ev) {
         let payload = {
@@ -113,7 +119,7 @@
       },
       updateAnnotatedContent () {
         this.annotatedContent = this.processText(this.content)
-        this.setAnnotatorProps(null)
+        this.setAnnotationEditorProps(null)
       },
       toggleEdition () {
         this.isEditing = !this.isEditing
@@ -140,9 +146,9 @@
       /*
       /******************************************/
 
-      setAnnotatorProps (hoveredAnnotatedElementPosition, annotationsId) {
-        this.annotator.hoveredAnnotatedElementPosition = hoveredAnnotatedElementPosition
-        if (typeof annotationsId !== 'undefined') this.annotator.annotationsId = annotationsId
+      setAnnotationEditorProps (hoveredAnnotatedElementPosition, annotationsId) {
+        this.annotationEditor.hoveredAnnotatedElementPosition = hoveredAnnotatedElementPosition
+        if (typeof annotationsId !== 'undefined') this.annotationEditor.annotationsId = annotationsId
       },
 
       /*
