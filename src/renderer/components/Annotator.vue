@@ -1,22 +1,15 @@
 <template>
   <div id="annotator" class="pt-2"
-    v-bind:class="{ invisible: !show }"
     v-bind:style="{ top: position.top + 'px', left: position.left + 'px' }"
     v-on:mouseover="selfHovered = true"
     v-on:mouseout="selfHovered = false"
     ref="annotator">
     <div class="p-2 container-fluid rounded">
-      <strong>Entité(s)</strong><br>
-      <div class="row my-1"
-        v-for="a in annotation">
+      <strong>Entité<span v-if="entities.length >= 2">s</span></strong><br>
+      <div class="row my-1 p-0"
+        v-for="e in entities">
         <div class="col-1"></div>
-        <div class="col-8">{{a.entity}}</div>
-        <div class="col-2">
-          <button type="button"
-            @click="deleteAnnotation(a.id)">
-            del
-          </button>
-        </div>
+        <div class="col-11">{{e}}</div>
       </div>
     </div>
   </div>
@@ -29,7 +22,6 @@ export default {
   name: 'app-annotator',
   data () {
     return {
-      'elementHovered': false,
       'selfHovered': false,
       'position': {
         'top': 0,
@@ -37,30 +29,17 @@ export default {
       }
     }
   },
-  props: ['hoveredElementPosition', 'annotationsId'],
+  props: ['mouse'],
   computed: {
-    show () {
-      return this.elementHovered || this.selfHovered
-    },
     ...mapState({
-      annotation (state) {
-        return state.document.annotations.filter(item => this.annotationsId.includes(item.id))
+      entities (state) {
+        return state.collection.entities
       }
     })
   },
   watch: {
-    hoveredElementPosition (newVal, oldVal) {
-      if (newVal !== null) {
-        this.position = this.computePosition(newVal)
-        this.elementHovered = true
-      } else {
-        this.elementHovered = false
-      }
-    },
-    annotationsId (newVal, oldVal) {
-      if (newVal.length === 0) {
-        this.annotationsId = oldVal
-      }
+    mouse (newVal, oldVal) {
+      this.position = this.computePosition(newVal)
     }
   },
   methods: {
@@ -71,26 +50,19 @@ export default {
     /*
     /******************************************/
 
-    deleteAnnotation (id) {
-      this.$store.commit('DELETE_ANNOTATION', { 'id': id })
-      this.$emit('update-annotated-content')
-    },
-
     /******************************************/
     /*
     /*    CORE
     /*
     /******************************************/
 
-    computePosition (tarRect) {
-      let annRect = this.$refs.annotator.getBoundingClientRect()
+    computePosition (mouse) {
+      let thisRect = this.$refs['annotator'].getBoundingClientRect()
       let docRect = document.body.getBoundingClientRect()
-      let left = tarRect.left + tarRect.width / 2 - annRect.width / 2
       let position = {}
-      position.top = tarRect.bottom
-      if (left + annRect.width > docRect.width) position.left = docRect.width - annRect.width
-      else if (left < 0) position.left = 0
-      else position.left = left
+      if (mouse.mouseX + thisRect.width >= docRect.width) position.left = mouse.mouseX - thisRect.width
+      else position.left = mouse.mouseX
+      position.top = mouse.mouseY
 
       return position
     }
@@ -110,8 +82,9 @@ export default {
 
   #annotator {
     width: 300px;
+    height: 300px;
     position: absolute;
-    z-index: 1000;
+    z-index: 1010;
     > div {
       background-color: yellow;
       border: 1px solid $grey;

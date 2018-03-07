@@ -5,6 +5,9 @@
       :annotations-id="annotationEditor.annotationsId"
       v-on:update-annotated-content="updateAnnotatedContent"></app-annotation-editor>
 
+    <app-annotator
+      :mouse="annotator"></app-annotator>
+
     <div class="row p-0 m-0"
       ref="host-text">
       <transition mode="in-out"
@@ -22,7 +25,7 @@
       </transition>
 
       <div id="highlighter" class="p-1"
-        @mousedown.right="mousedown"
+        @mousemove="mousedown"
         ref="highlighter">
         <span v-for="c in annotatedContent" class="container-hl">
           <span v-if="c.type === 'text'">{{c.text}}</span>
@@ -75,6 +78,10 @@
         'annotationEditor': {
           'hoveredAnnotatedElementPosition': null,
           'annotationsId': []
+        },
+        'annotator': {
+          'mouseX': 0,
+          'mouseY': 0
         }
       }
     },
@@ -103,9 +110,7 @@
         this.setAnnotationEditorProps(null)
       },
       mousedown (ev) {
-        let mX = ev.clientX
-        let mY = ev.clientY
-        console.log(mX + ' ' + mY)
+        this.annotator = { 'mouseX': ev.clientX, 'mouseY': ev.clientY }
       },
       updateContent (ev) {
         let payload = {
