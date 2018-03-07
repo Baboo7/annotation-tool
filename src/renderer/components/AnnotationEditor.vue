@@ -2,8 +2,8 @@
   <div id="annotation-editor" class="pt-2"
     v-bind:class="{ invisible: !show }"
     v-bind:style="{ top: position.top + 'px', left: position.left + 'px' }"
-    v-on:mouseover="selfHovered = true"
-    v-on:mouseout="selfHovered = false"
+    @mouseover="selfHovered = true"
+    @mouseout="selfHovered = false"
     ref="annotation-editor">
     <div class="p-2 container-fluid rounded">
       <strong>Annotation<span v-if="annotations.length >= 2">s</span></strong><br>
@@ -70,6 +70,7 @@ export default {
 
     deleteAnnotation (id) {
       this.$store.commit('DELETE_ANNOTATION', { 'id': id })
+      if (this.annotations.length === 0) this.selfHovered = false
       this.$emit('update-annotated-content')
     },
 

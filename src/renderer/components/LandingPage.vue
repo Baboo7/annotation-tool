@@ -26,13 +26,13 @@
       </transition>
 
       <div id="highlighter" class="p-1"
-        @mousedown.right="mousedown"
+        @mouseup.left="mouseup"
         ref="highlighter">
         <span v-for="c in annotatedContent" class="container-hl">
           <span v-if="c.type === 'text'">{{c.text}}</span>
           <span v-if="c.type === 'annotation'" class="annotation"
-            v-on:mouseover="login(c.annotations, $event)"
-            v-on:mouseout="logout(c.annotations, $event)">{{c.text}}</span>
+            @mouseover="login(c.annotations, $event)"
+            @mouseout="logout(c.annotations, $event)">{{c.text}}</span>
         </span>
       </div>
     </div>
@@ -105,8 +105,9 @@
       logout (ids, ev) {
         this.setAnnotationEditorProps(null)
       },
-      mousedown (ev) {
-        this.annotator = { 'mouseX': ev.clientX, 'mouseY': ev.clientY }
+      mouseup (ev) {
+        let selection = this.getSelectionCharacterOffsetWithin(this.$refs.highlighter)
+        if (selection.start !== selection.end) this.annotator = { 'mouseX': ev.clientX, 'mouseY': ev.clientY }
       },
       updateContent (ev) {
         let payload = {
