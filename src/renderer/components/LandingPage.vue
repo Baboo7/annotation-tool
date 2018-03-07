@@ -10,8 +10,10 @@
       <transition mode="in-out"
         v-on:before-enter="fadeBefore"
         v-on:enter="fade"
+        v-on:after-enter="fadeAfter"
         v-on:before-leave="fadeBefore"
-        v-on:leave="fade">
+        v-on:leave="fade"
+        v-on:after-leave="fadeAfter">
         <div id="editor" class="p-1"
           v-show="isEditing"
           contenteditable="true"
@@ -214,11 +216,7 @@
             end: (number) end index of the selection relative to the content
       */
       getSelectionCharacterOffsetWithin (element) {
-        let doc = element.ownerDocument || element.document
-        let win = doc.defaultView || doc.parentWindow
-        let sel
-
-        sel = win.getSelection()
+        let sel = window.getSelection()
         let start = 0
         let end = 0
         if (sel.rangeCount > 0) {
@@ -265,8 +263,6 @@
         if (this.isEditing) {
           this.$refs['editor'].style.opacity = 1
           this.$refs['editor'].style.width = `${hostTextWidth / 2}px`
-          this.$refs['editor'].style.whiteSpace = 'normal'
-          this.$refs['editor'].style.overflow = 'visible'
 
           this.$refs['highlighter'].style.width = `${hostTextWidth / 2}px`
         } else {
@@ -286,6 +282,15 @@
         } else {
           Velocity(this.$refs['editor'], { opacity: 0, width: '0px' }, { duration: 500, complete: done })
           Velocity(this.$refs['highlighter'], { width: `${hostTextWidth}px` }, { duration: 500 })
+        }
+      },
+      fadeAfter () {
+        let hostTextWidth = this.$refs['host-text'].getBoundingClientRect().width - 10
+        if (this.isEditing) {
+          this.$refs['editor'].style.whiteSpace = 'normal'
+          this.$refs['editor'].style.overflow = 'visible'
+
+          this.$refs['highlighter'].style.width = `${hostTextWidth / 2}px`
         }
       }
     }
