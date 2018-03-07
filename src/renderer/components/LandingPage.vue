@@ -4,21 +4,25 @@
       :hovered-element-position="annotator.hoveredAnnotatedElementPosition"
       :annotations-id="annotator.annotationsId"></app-annotator>
 
-    <div class="row p-0 m-0">
-      <div id="editor" class="p-1 w-100"
-        v-show="isEditing"
-        contenteditable="true"
-        @input="updateContent"
-        ref="editor">
-      </div>
+    <div class="row p-0 m-0"
+      ref="host-text">
+      <transition mode="in-out"
+        v-on:before-enter="fadeBefore"
+        v-on:enter="fade"
+        v-on:before-leave="fadeBefore"
+        v-on:leave="fade">
+        <div id="editor" class="p-1"
+          v-show="isEditing"
+          contenteditable="true"
+          @input="updateContent"
+          ref="editor"></div>
+      </transition>
 
-      <div id="highlighter" class="p-1 w-100"
-        v-show="!isEditing"
+      <div id="highlighter" class="p-1"
         ref="highlighter">
         <span v-for="c in annotatedContent" class="container-hl">
           <span v-if="c.type === 'text'">{{c.text}}</span>
-          <span v-if="c.type === 'annotation'"
-            class="annotation"
+          <span v-if="c.type === 'annotation'" class="annotation"
             v-on:mouseover="login(c.annotations, $event)"
             v-on:mouseout="logout(c.annotations, $event)">{{c.text}}</span>
         </span>
@@ -26,36 +30,35 @@
     </div>
 
     <div id="actions" class="mt-2">
-      <div v-show="isEditing">
-        <button type="button" class="btn btn-primary"
-          @click="toggleEdition">
-          Annotate
-        </button>
-      </div>
+      <button type="button" class="btn btn-primary"
+        v-bind:class="{
+          'btn-light': isEditing,
+          'btn-secondary': !isEditing
+        }"
+        @click="toggleEdition">
+        Edit
+      </button>
 
-      <div v-show="!isEditing">
-        <button type="button" class="btn btn-primary"
-          @click="toggleEdition">
-          Edit
-        </button>
+      <button class="btn"
+        v-bind:class="{
+          'btn-light': fadeStopwords,
+          'btn-secondary': !fadeStopwords
+        }"
+        @click="toggleFadeStopwords">
+        stopwords
+      </button>
 
-        <button class="btn"
-          v-bind:class="{ 'btn-light': fadeStopwords, 'btn-secondary': !fadeStopwords }"
-          @click="toggleFadeStopwords">
-          stopwords
-        </button>
-
-        <button type="button" class="btn btn-info"
-          @click="setSelectionBlue">
-          blue
-        </button>
-      </div>
+      <button type="button" class="btn btn-info"
+        @click="setSelectionBlue">
+        blue
+      </button>
     </div>
   </div>
 </template>
 
 <script>
   import { mapState } from 'vuex'
+  import Velocity from 'velocity-animate'
 
   export default {
     name: 'landing-page',
@@ -77,6 +80,9 @@
           return state.document.annotations
         }
       })
+    },
+    mounted () {
+      this.fadeBefore()
     },
     methods: {
 
@@ -100,6 +106,7 @@
         }
         this.$store.commit('UPDATE_ANNOTATIONS_BOUNDS', payload)
         this.content = ev.target.innerText
+        this.updateAnnotatedContent()
       },
       updateAnnotatedContent () {
         this.annotatedContent = this.processText(this.content)
@@ -107,7 +114,6 @@
       },
       toggleEdition () {
         this.isEditing = !this.isEditing
-        if (!this.isEditing) this.updateAnnotatedContent()
       },
       toggleFadeStopwords () {
         this.fadeStopwords = !this.fadeStopwords
@@ -245,6 +251,41 @@
         }
 
         return convertedId
+      },
+
+      /******************************************/
+      /*
+      /*    ANIMATION HOOKS
+      /*
+      /******************************************/
+
+      fadeBefore () {
+        let hostTextWidth = this.$refs['host-text'].getBoundingClientRect().width - 10
+        if (this.isEditing) {
+          this.$refs['editor'].style.opacity = 1
+          this.$refs['editor'].style.width = `${hostTextWidth / 2}px`
+          this.$refs['editor'].style.whiteSpace = 'normal'
+          this.$refs['editor'].style.overflow = 'visible'
+
+          this.$refs['highlighter'].style.width = `${hostTextWidth / 2}px`
+        } else {
+          this.$refs['editor'].style.opacity = 0
+          this.$refs['editor'].style.width = '0px'
+          this.$refs['editor'].style.whiteSpace = 'nowrap'
+          this.$refs['editor'].style.overflow = 'hidden'
+
+          this.$refs['highlighter'].style.width = `${hostTextWidth}px`
+        }
+      },
+      fade (el, done) {
+        let hostTextWidth = this.$refs['host-text'].getBoundingClientRect().width - 10
+        if (this.isEditing) {
+          Velocity(this.$refs['editor'], { opacity: 1, width: `${hostTextWidth / 2}px` }, { duration: 500, complete: done })
+          Velocity(this.$refs['highlighter'], { width: `${hostTextWidth / 2}px` }, { duration: 500 })
+        } else {
+          Velocity(this.$refs['editor'], { opacity: 0, width: '0px' }, { duration: 500, complete: done })
+          Velocity(this.$refs['highlighter'], { width: `${hostTextWidth}px` }, { duration: 500 })
+        }
       }
     }
   }
@@ -262,11 +303,12 @@
 
   #host {
     margin: 0 auto;
-    max-width: 800px;
+    max-width: 1000px;
 
     #editor, #highlighter {
       min-height: 300px;
-      background-color: white;
+      background-color: $grey-l;
+      border: 1px solid $grey;
       word-wrap: break-word;
       text-align: justify;
     }
